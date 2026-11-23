@@ -186,17 +186,12 @@ def load_cutouts():
     result = {}
     for name in ("book_quill", "lantern", "river"):
         path = CUTOUTS / f"{name}.png"
-        im = Image.open(path).convert("RGBA") if path.exists() else draw_vector_cutout(name)
-        im.thumbnail((650, 630), Image.Resampling.LANCZOS)
-        def make_shadow(source, amount=42, blur=12):
-            sh = Image.new("RGBA", source.size, (0, 0, 0, 0))
-            sh.putalpha(source.getchannel("A").point(lambda value: value * amount // 255))
-            return sh.filter(ImageFilter.GaussianBlur(blur))
-        compact = im.resize((470, 455), Image.Resampling.LANCZOS)
-        result[name] = {
-            "normal": (im, make_shadow(im)),
-            "compact": (compact, make_shadow(compact, amount=42, blur=10)),
-        }
+        image = Image.open(path).convert("RGBA") if path.exists() else draw_vector_cutout(name)
+        image.thumbnail((650, 630), Image.Resampling.LANCZOS)
+        shadow = Image.new("RGBA", image.size, (0, 0, 0, 0))
+        shadow.putalpha(image.getchannel("A").point(lambda value: value * 42 // 255))
+        shadow = shadow.filter(ImageFilter.GaussianBlur(12))
+        result[name] = (image, shadow)
     return result
 
 
