@@ -1,0 +1,67 @@
+name: Fetch Sheikh Abdulrazzaq - Dua Al-Istiftah Audio
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/fetch_istiftah_audio.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-audio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install audio downloader
+        run: |
+          python -m pip install --upgrade "yt-dlp[default]"
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg curl
+
+      - name: Download dedicated episode (060)
+        continue-on-error: true
+        run: |
+          mkdir -p out
+          yt-dlp --no-playlist --remote-components ejs:github \
+            -f "bestaudio/best" -x --audio-format mp3 --audio-quality 0 \
+            -o "out/istiftah-060.%(ext)s" \
+            "https://www.youtube.com/watch?v=wBp4vAKMeyA"
+
+      - name: Fallback to IslamHouse audio if YouTube download is unavailable
+        if: ${{ !hashFiles('out/istiftah-060.mp3') }}
+        run: |
+          curl --fail --location --retry 3 \
+            -o out/istiftah-islamhouse.mp3 \
+            "https://d1.islamhouse.com/data/ar/ih_sounds/chain_02/shar7-azkar-tahara-salah-al-badr/ar-03-shar7-azkar-tahara-salah.mp3"
+          test -s out/istiftah-islamhouse.mp3
+
+      - name: Fetch time-coded transcription
+        continue-on-error: true
+        run: |
+          curl --fail --location --retry 2 \
+            -o out/istiftah-060.srt \
+            "https://baheth.ieasybooks.com/ar/media/060-%D8%AD%D8%A7%D8%AF%D9%8A%D8%AB-%D8%A7%D9%84-%D8%B0%D9%83%D8%A7%D8%B1-%D9%88%D8%A7%D9%84-%D8%AF%D8%B9%D9%8A%D8%A9%D8%A3%D8%AF%D8%B9%D9%8A%D8%A9%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%AA%D8%A7%D8%AD%D8%A7%D9%84%D8%B4%D9%8A%D8%AE-%D8%B9%D8%A8%D8%AF-%D8%A7%D9%84%D8%B1%D8%B2%D8%A7%D9%82-%D8%A7%D9%84%D8%A8%D8%AF%D8%B1/download_transcription_in_srt"
+          test -s out/istiftah-060.srt
+
+      - name: Inspect source files
+        run: |
+          ls -lh out
+          for f in out/*.mp3; do
+            [ -f "$f" ] && ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$f"
+          done
+
+      - name: Upload source audio and transcript
+        uses: actions/upload-artifact@v4
+        with:
+          name: istiftah-source-audio
+          path: |
+            out/*.mp3
+            out/*.srt
+          if-no-files-found: error
+          retention-days: 7
