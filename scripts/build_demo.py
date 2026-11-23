@@ -399,12 +399,17 @@ def verify_output(video_path, audio_source, report_path, frame_count, audio_mode
     lines = volume.stderr.splitlines()
     start = next((i for i, line in enumerate(lines) if "Summary:" in line), max(0, len(lines)-18))
     audio_summary = "\n".join(lines[start:])
+    voice_note = (
+        "Voice preservation: the original supplied recording is kept; only mild loudness/true-peak adjustment and AAC encoding are applied, with no pitch conversion or cloning.\n"
+        if audio_mode == "supplied-original-audio"
+        else "Voice generation: Edge TTS created the built-in demonstration narration because no supplied voice file was found.\n"
+    )
     report = (
         f"Audio mode: {audio_mode}\n"
         f"Audio source: {audio_source}\n"
         f"Video frame count: {frame_count}\n"
-        "Voice preservation: supplied narration is retained; no voice cloning or pitch conversion is applied.\n"
-        "Visual sync: caption and illustration transitions follow the authored scene timeline; this illustration-led mode does not synthesize phoneme-level mouth shapes.\n\n"
+        + voice_note
+        + "Visual sync: caption and illustration transitions follow the authored scene timeline; this illustration-led mode does not synthesize phoneme-level mouth shapes.\n\n"
         "=== FFPROBE ===\n" + json.dumps(data, ensure_ascii=False, indent=2)
         + "\n\n=== EBU R128 AUDIO SUMMARY ===\n" + audio_summary + "\n"
     )
