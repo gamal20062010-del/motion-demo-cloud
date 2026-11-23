@@ -1,0 +1,108 @@
+{
+  "scenes": [
+    {
+      "start": 0.0,
+      "end": 4.6,
+      "caption": "فَلَيْتَكَ تَحْلُو وَالْحَيَاةُ مُرِيرَةٌ",
+      "visual": "book_quill",
+      "palette": "rose",
+      "side": "right"
+    },
+    {
+      "start": 4.6,
+      "end": 9.45,
+      "caption": "وَلَيْتَكَ تَرْضَى وَالْأَنَامُ غِضَابُ",
+      "visual": "lantern",
+      "palette": "lavender",
+      "side": "left"
+    },
+    {
+      "start": 9.45,
+      "end": 15.35,
+      "caption": "وَلَيْتَ الَّذِي بَيْنِي وَبَيْنَكَ عَامِرٌ\nوَبَيْنِي وَبَيْنَ الْعَالَمِينَ خَرَابٌ",
+      "visual": "river",
+      "palette": "sky",
+      "side": "right"
+    },
+    {
+      "start": 15.35,
+      "end": 20.15,
+      "caption": "إِذَا صَحَّ مِنْكَ الْوُدُّ فَالْكُلُّ هَيِّنٌ",
+      "visual": "book_quill",
+      "palette": "cream",
+      "side": "left"
+    },
+    {
+      "start": 20.15,
+      "end": 24.65,
+      "caption": "وَكُلُّ الَّذِي فَوْقَ التُّرَابِ تُرَابٌ",
+      "visual": "river",
+      "palette": "mint",
+      "side": "right"
+    },
+    {
+      "start": 24.65,
+      "end": 28.1,
+      "caption": "فَيَا لَيْتَ شِعْرِي مِنْ وِدَادِكَ صَافِيًا",
+      "visual": "book_quill",
+      "palette": "peach",
+      "side": "left"
+    },
+    {
+      "start": 28.1,
+      "end": 31.45,
+      "caption": "وَشُرْبِي مِنْ مَاءِ الْفُرَاتِ",
+      "visual": "river",
+      "palette": "aqua",
+      "side": "right"
+    },
+    {
+      "start": 31.45,
+      "end": 35.1,
+      "caption": "تَنْبِيهٌ: هَذِهِ الْأَبْيَاتُ لِأَبِي فِرَاسٍ الْحَمْدَانِيِّ",
+      "visual": "lantern",
+      "palette": "rose",
+      "side": "left"
+    },
+    {
+      "start": 35.1,
+      "end": 39.1,
+      "caption": "وَلَسْتُ بِرَابِعَةِ الْعَدَوِيَّةِ وَلَا الْحَلَّاجِ",
+      "visual": "book_quill",
+      "palette": "lavender",
+      "side": "right"
+    },
+    {
+      "start": 39.1,
+      "end": 42.55,
+      "caption": "وَقَدْ قَالَهَا الشَّاعِرُ فِي مُخَاطَبَةِ مَخْلُوقٍ بِوِدَادِهِ",
+      "visual": "lantern",
+      "palette": "peach",
+      "side": "left"
+    },
+    {
+      "start": 42.55,
+      "end": 46.05,
+      "caption": "وَلَيْسَتْ فِي أَصْلِهَا مُنَاجَاةً لِلَّهِ",
+      "visual": "river",
+      "palette": "mint",
+      "side": "right"
+    },
+    {
+      "start": 46.05,
+      "end": 48.75,
+      "caption": "وَأَثْنَى ابْنُ الْقَيِّمِ فِي مَدَارِجِ السَّالِكِينَ عَلَى…",
+      "visual": "book_quill",
+      "palette": "cream",
+      "side": "left"
+    },
+    {
+      "start": 48.75,
+      "end": 50.41,
+      "caption": "وَلَكِنَّهُ أَنْكَرَ تَوْجِيهَهَا إِلَى…",
+      "visual": "lantern",
+      "palette": "aqua",
+      "side": "right"
+    }
+  ]
+}
