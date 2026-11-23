@@ -9,19 +9,27 @@ When a narration file exists, the renderer uses that exact recording as the voic
 It does not generate a replacement voice or change the speaker's pitch. The export applies
 only a light loudness/true-peak delivery adjustment.
 
-For custom caption timing, copy scenes.example.json to scenes.json and edit each scene's:
-  start, end, caption, visual, palette, side
+EDITING RULES
 
-Allowed visual values: book_quill, lantern, river
-Allowed palette values: rose, lavender, sky, cream, mint, peach, aqua
-Optional presenter values: navy, teal, plum. A presenter enters opposite the illustration; mouth movement follows per-frame speech RMS (approximate, not phoneme-level).
-Time values are in seconds from the beginning of the narration.
+Copy scenes.example.json to scenes.json and edit each caption's:
+  start, end, caption
 
-Optional custom transparent PNGs can be placed in assets/cutouts using the names:
+Visual settings:
+  visual: book_quill, lantern, or river
+  palette: rose, lavender, sky, cream, mint, peach, or aqua
+  topic: a short description of the current spoken subject
+
+The illustration remains on screen across consecutive captions for the same subject.
+It does not enter or exit on every sentence. A short cross-fade occurs only when the
+visual subject changes. There are no talking cartoon characters in this version.
+
+Optional custom transparent PNGs can be placed in assets/cutouts using:
   book_quill.png, lantern.png, river.png
-When these PNGs are absent, the engine draws original transparent vector illustrations locally.
+If absent, the engine draws original transparent illustrations locally.
+
+Time values are seconds from the beginning of the narration.
 
 PRIVACY NOTE:
-The current GitHub repository is public. Any narration file committed to it becomes public.
+The GitHub repository is public. Any narration file committed to it becomes public.
 Change the repository to Private before uploading private, personal, or rights-restricted audio.
 If no narration file is present, the workflow uses Edge TTS for the built-in demonstration lines.
