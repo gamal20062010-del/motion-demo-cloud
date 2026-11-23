@@ -25,10 +25,16 @@ VOICE = "ar-SA-HamedNeural"
 
 # TTS fallback is used only when no supplied narration file exists.
 TTS_SCENES = [
-    {"caption": "فَلَيْتَكَ تَحْلُو وَالْحَيَاةُ مُرِيرَةٌ", "speech": "فَلَيْتَكَ تَحْلُو وَالْحَيَاةُ مُرِيرَةٌ.", "visual": "book_quill", "palette": "rose", "side": "right"},
-    {"caption": "وَلَيْتَكَ تَرْضَى وَالْأَنَامُ غِضَابُ", "speech": "وَلَيْتَكَ تَرْضَى وَالْأَنَامُ غِضَابُ.", "visual": "lantern", "palette": "lavender", "side": "left"},
-    {"caption": "وَكُلُّ الَّذِي فَوْقَ التُّرَابِ تُرَابٌ", "speech": "وَكُلُّ الَّذِي فَوْقَ التُّرَابِ تُرَابٌ.", "visual": "river", "palette": "sky", "side": "right"},
+    {"caption": "فَلَيْتَكَ تَحْلُو وَالْحَيَاةُ مُرِيرَةٌ", "speech": "فَلَيْتَكَ تَحْلُو وَالْحَيَاةُ مُرِيرَةٌ.", "visual": "book_quill", "palette": "rose", "side": "right", "presenter": "navy"},
+    {"caption": "وَلَيْتَكَ تَرْضَى وَالْأَنَامُ غِضَابُ", "speech": "وَلَيْتَكَ تَرْضَى وَالْأَنَامُ غِضَابُ.", "visual": "lantern", "palette": "lavender", "side": "left", "presenter": "teal"},
+    {"caption": "وَكُلُّ الَّذِي فَوْقَ التُّرَابِ تُرَابٌ", "speech": "وَكُلُّ الَّذِي فَوْقَ التُّرَابِ تُرَابٌ.", "visual": "river", "palette": "sky", "side": "right", "presenter": "plum"},
 ]
+
+PRESENTER_PALETTES = {
+    "navy": {"skin": (218, 163, 125), "hair": (52, 39, 34), "shirt": (54, 91, 143), "shirt_dark": (32, 60, 99), "accent": (232, 186, 94)},
+    "teal": {"skin": (195, 140, 107), "hair": (40, 34, 31), "shirt": (42, 145, 139), "shirt_dark": (26, 100, 101), "accent": (244, 201, 122)},
+    "plum": {"skin": (226, 175, 139), "hair": (76, 48, 47), "shirt": (133, 89, 132), "shirt_dark": (86, 55, 93), "accent": (239, 190, 108)},
+}
 
 PALETTES = {
     "rose": ((255, 244, 243), (250, 211, 211), (210, 119, 125), (75, 55, 63)),
@@ -182,6 +188,86 @@ def draw_vector_cutout(name):
     return im.resize((w, h), Image.Resampling.LANCZOS)
 
 
+def draw_presenter(style, mouth_open=0.0, gesture=0.0):
+    """Render an original transparent 2D cartoon narrator with an audio-reactive mouth."""
+    c = PRESENTER_PALETTES.get(style, PRESENTER_PALETTES["navy"])
+    w, h = 340, 520
+    im = Image.new("RGBA", (w*2, h*2), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    def b(coords): return tuple(int(v*2) for v in coords)
+    def el(coords, fill, outline=None, width=3):
+        d.ellipse(b(coords), fill=fill, outline=outline, width=width*2 if outline else 1)
+    def ln(points, fill, width=5):
+        d.line([(int(x*2), int(y*2)) for x,y in points], fill=fill, width=width*2, joint="curve")
+
+    d.ellipse(b((36, 486, 308, 516)), fill=(22, 31, 47, 34))
+    d.rounded_rectangle(b((30, 300, 310, 512)), radius=70*2, fill=c["shirt"], outline=(48, 54, 68, 255), width=8)
+    d.polygon([(88*2,300*2), (170*2,354*2), (143*2,510*2), (70*2,510*2)], fill=c["shirt_dark"])
+    d.polygon([(252*2,300*2), (170*2,354*2), (200*2,510*2), (276*2,510*2)], fill=c["shirt_dark"])
+    d.polygon([(136*2,294*2),(170*2,356*2),(204*2,294*2),(187*2,402*2),(153*2,402*2)], fill=(246,242,230,255))
+    d.polygon([(162*2,354*2),(178*2,354*2),(188*2,430*2),(170*2,452*2),(152*2,430*2)], fill=c["accent"])
+    d.rounded_rectangle(b((141, 245, 199, 330)), radius=36, fill=c["skin"])
+    el((78, 142, 120, 202), c["skin"], (122,82,62,255), 3)
+    el((220, 142, 262, 202), c["skin"], (122,82,62,255), 3)
+    el((91, 62, 249, 285), c["skin"], (103,69,55,255), 4)
+    d.pieslice(b((84, 35, 256, 210)), 180, 360, fill=c["hair"])
+    d.polygon([(88*2,141*2),(103*2,82*2),(136*2,56*2),(164*2,78*2),(194*2,47*2),(231*2,75*2),(255*2,137*2),(241*2,160*2),(218*2,128*2),(185*2,113*2),(143*2,132*2),(112*2,169*2)], fill=c["hair"])
+    d.pieslice(b((87, 145, 124, 256)), 90, 280, fill=c["hair"])
+    d.pieslice(b((216, 145, 253, 256)), 260, 90, fill=c["hair"])
+    ln([(122,153),(146,148)], c["hair"], 5)
+    ln([(194,148),(218,153)], c["hair"], 5)
+    el((119, 158, 151, 185), (255,255,255,255))
+    el((189, 158, 221, 185), (255,255,255,255))
+    el((131, 163, 145, 181), (42,45,53,255))
+    el((195, 163, 209, 181), (42,45,53,255))
+    el((136, 166, 141, 171), (255,255,255,255))
+    el((200, 166, 205, 171), (255,255,255,255))
+    ln([(171,174),(163,202),(174,208)], (147,92,68,230), 3)
+    m = max(0.0, min(1.0, float(mouth_open)))
+    if m < 0.13:
+        d.arc(b((143, 215, 198, 247)), 8, 172, fill=(111,48,55,255), width=8)
+    else:
+        mh = int(5 + m*28)
+        d.ellipse(b((151, 228-mh/2, 190, 228+mh/2)), fill=(82,31,44,255), outline=(112,50,58,255), width=4)
+        if m > 0.35:
+            d.ellipse(b((158, 228+mh/2-9, 184, 228+mh/2-2)), fill=(211,105,119,255))
+    el((113, 202, 130, 212), (230,132,119,95))
+    el((210, 202, 227, 212), (230,132,119,95))
+    lift = 12*float(gesture)
+    ln([(286, 346),(314, 292-lift),(298, 245-lift)], c["shirt"], 28)
+    el((286, 222-lift, 312, 254-lift), c["skin"], (122,82,62,255), 2)
+    ln([(297, 226-lift),(308, 209-lift)], c["skin"], 5)
+    return im.resize((w,h), Image.Resampling.LANCZOS)
+
+
+def make_voice_envelope(audio_path, frame_count, tmp_dir):
+    """Per-frame voice RMS drives mouth opening; this is not phoneme recognition."""
+    pcm_path = tmp_dir / "voice_envelope_mono.wav"
+    run(["ffmpeg", "-y", "-i", str(audio_path), "-vn", "-ar", "48000", "-ac", "1",
+         "-c:a", "pcm_s16le", str(pcm_path)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    with wave.open(str(pcm_path), "rb") as wav:
+        sample_rate = wav.getframerate()
+        samples = array("h")
+        samples.frombytes(wav.readframes(wav.getnframes()))
+    samples_per_frame = max(1, round(sample_rate / FPS))
+    rms_values = []
+    for i in range(frame_count):
+        part = samples[i*samples_per_frame:(i+1)*samples_per_frame]
+        if not part:
+            rms_values.append(0.0)
+        else:
+            rms_values.append(math.sqrt(sum(int(x)*int(x) for x in part) / len(part)) / 32768.0)
+    peak = max(rms_values, default=0.0)
+    if peak < 0.0005:
+        return [0.0] * frame_count
+    out, previous = [], 0.0
+    for value in rms_values:
+        target = max(0.0, min(1.0, (value/peak - 0.10) / 0.62))
+        previous = previous*0.38 + target*0.62
+        out.append(previous)
+    return out
+
+
 def load_cutouts():
     result = {}
     for name in ("book_quill", "lantern", "river"):
@@ -240,23 +326,49 @@ def make_caption_card(scene, fonts):
 
 def place_cutout(canvas, cutout_pack, scene, t, duration):
     image, shadow = cutout_pack
+    has_presenter = scene.get("presenter") in PRESENTER_PALETTES
+    if has_presenter:
+        image = image.resize((470, 455), Image.Resampling.LANCZOS)
+        shadow = Image.new("RGBA", image.size, (0, 0, 0, 0))
+        shadow.putalpha(image.getchannel("A").point(lambda value: value * 42 // 255))
+        shadow = shadow.filter(ImageFilter.GaussianBlur(10))
     enter = ease(t / 0.72)
     leave = ease((duration - t) / 0.58)
     direction = 1 if scene.get("side") == "right" else -1
     w, h = image.size
-    center_x = WIDTH // 2
+    target_x = int(WIDTH*0.72) if has_presenter and direction == 1 else (
+        int(WIDTH*0.28) if has_presenter else WIDTH//2
+    )
     offscreen = WIDTH + w if direction == 1 else -w
     shift = max(1.0 - enter, 1.0 - leave)
-    x_center = center_x + (offscreen - center_x) * shift
+    x_center = target_x + (offscreen - target_x) * shift
     x = int(x_center - w // 2 + 7 * math.sin(t * 2.0))
-    y = int(990 + 7 * math.sin(t * 2.35))
+    y = int(1000 + 7 * math.sin(t * 2.35))
     if x > WIDTH or x + w < 0:
         return
     canvas.alpha_composite(shadow, (x + 7, y + 15))
     canvas.alpha_composite(image, (x, y))
 
 
-def draw_frame(scene, local_t, duration, global_progress, background, previous_background, cutouts, card):
+def place_presenter(canvas, style, scene, t, duration, mouth_open):
+    if style not in PRESENTER_PALETTES:
+        return
+    side = "left" if scene.get("side") == "right" else "right"
+    width = 340
+    target_x = 38 if side == "left" else WIDTH-width-38
+    offscreen_x = -width-20 if side == "left" else WIDTH+20
+    enter = ease(t/0.72)
+    leave = ease((duration-t)/0.58)
+    shift = max(1.0-enter, 1.0-leave)
+    x = int(target_x + (offscreen_x-target_x)*shift)
+    bob = 5*math.sin(t*3.2)
+    character = draw_presenter(style, mouth_open, 0.5+0.5*math.sin(t*2.9))
+    if x > WIDTH or x+width < 0:
+        return
+    canvas.alpha_composite(character,(x,int(1105+bob)))
+
+
+def draw_frame(scene, local_t, duration, global_progress, background, previous_background, cutouts, card, mouth_open=0.0):
     enter = ease(local_t / 0.55)
     if previous_background is not None and local_t < 0.45:
         bg = Image.blend(previous_background, background, ease(local_t / 0.45))
@@ -279,6 +391,7 @@ def draw_frame(scene, local_t, duration, global_progress, background, previous_b
     d.rounded_rectangle((underline_x, card_y+628, underline_x+int(410*caption_progress), card_y+638), radius=5, fill=(*accent, 255))
 
     place_cutout(bg, cutouts[scene["visual"]], scene, local_t, duration)
+    place_presenter(bg, scene.get("presenter"), scene, local_t, duration, mouth_open)
     d = ImageDraw.Draw(bg)
     for i in range(4):
         x = int(90 + ((i*223 + scene.get("scene_no", 1)*61 + local_t*18) % 900))
@@ -358,6 +471,8 @@ def use_source_audio(audio_path):
             raise ValueError(f"Scene {index} uses an unknown visual cutout: {scene['visual']}")
         if scene["palette"] not in PALETTES:
             raise ValueError(f"Scene {index} uses an unknown palette: {scene['palette']}")
+        if scene.get("presenter") is not None and scene["presenter"] not in PRESENTER_PALETTES:
+            raise ValueError(f"Scene {index} uses an unknown presenter style: {scene['presenter']}")
         start = max(0.0, min(duration, float(scene["start"])))
         end = max(0.0, min(duration, float(scene["end"])))
         if end <= start:
@@ -377,7 +492,7 @@ def use_source_audio(audio_path):
     return audio_path, timeline, duration, "supplied-original-audio"
 
 
-def verify_output(video_path, audio_source, report_path, frame_count, audio_mode):
+def verify_output(video_path, audio_source, report_path, frame_count, audio_mode, presenter_enabled=False):
     probe = subprocess.check_output([
         "ffprobe", "-v", "error", "-show_entries",
         "format=duration:stream=codec_type,width,height,r_frame_rate,sample_rate,channels",
@@ -409,7 +524,12 @@ def verify_output(video_path, audio_source, report_path, frame_count, audio_mode
         f"Audio source: {audio_source}\n"
         f"Video frame count: {frame_count}\n"
         + voice_note
-        + "Visual sync: caption and illustration transitions follow the authored scene timeline; this illustration-led mode does not synthesize phoneme-level mouth shapes.\n\n"
+        + (
+            "Presenter mouth motion follows per-frame speech RMS as an approximate visual sync; it is not phoneme-level Arabic viseme recognition.\n"
+            if presenter_enabled
+            else "Caption and illustration transitions follow the authored scene timeline; no presenter mouth layer is enabled.\n"
+        )
+        + "\n"
         "=== FFPROBE ===\n" + json.dumps(data, ensure_ascii=False, indent=2)
         + "\n\n=== EBU R128 AUDIO SUMMARY ===\n" + audio_summary + "\n"
     )
@@ -448,6 +568,25 @@ async def main():
         cards.append(make_caption_card(scene, fonts))
 
     frame_count = int(math.ceil(audio_duration * FPS))
+    mouth_values = make_voice_envelope(audio_path, frame_count, tmp_dir)
+    presenter_enabled = any(scene.get("presenter") in PRESENTER_PALETTES for scene in timeline)
+    lip_rows = []
+    for scene in timeline:
+        a = int(round(scene["start"] * FPS))
+        b = min(frame_count, int(round(scene["end"] * FPS)))
+        values = mouth_values[a:b]
+        lip_rows.append({
+            "scene_no": scene.get("scene_no"),
+            "presenter": scene.get("presenter"),
+            "frames": len(values),
+            "mouth_open_mean": round(sum(values)/max(1,len(values)),4),
+            "mouth_open_max": round(max(values,default=0.0),4),
+        })
+    (out_dir / "lip_sync.json").write_text(json.dumps({
+        "method": "per-frame speech RMS; approximate mouth opening, not phoneme-level visemes",
+        "presenter_enabled": presenter_enabled,
+        "scenes": lip_rows,
+    }, ensure_ascii=False, indent=2), encoding="utf-8")
     video_path = out_dir / "demo_final.mp4"
     ffmpeg_cmd = [
         "ffmpeg", "-y", "-f", "rawvideo", "-vcodec", "rawvideo",
@@ -470,7 +609,8 @@ async def main():
             for absolute_frame in range(start_frame, end_frame):
                 local_t = absolute_frame/FPS - scene["start"]
                 progress = absolute_frame/max(1, frame_count-1)
-                frame = draw_frame(scene, local_t, duration, progress, backgrounds[idx], previous_bg, cutouts, cards[idx])
+                mouth_open = mouth_values[absolute_frame] if absolute_frame < len(mouth_values) else 0.0
+                frame = draw_frame(scene, local_t, duration, progress, backgrounds[idx], previous_bg, cutouts, cards[idx], mouth_open)
                 proc.stdin.write(frame.tobytes())
                 frame_index += 1
     except BrokenPipeError as exc:
@@ -483,7 +623,7 @@ async def main():
     if frame_index != frame_count:
         raise RuntimeError(f"Rendered {frame_index} frames but expected {frame_count}; check scene timing for gaps.")
 
-    verify_output(video_path, audio_path, out_dir / "verification_report.txt", frame_index, audio_mode)
+    verify_output(video_path, audio_path, out_dir / "verification_report.txt", frame_index, audio_mode, presenter_enabled)
     print(f"Rendered {video_path} with {len(timeline)} scenes and {frame_index} frames")
 
 
