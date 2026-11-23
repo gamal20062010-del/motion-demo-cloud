@@ -53,7 +53,7 @@ jobs:
       - name: Render video
         run: python scripts/build_demo.py
 
-      - name: Upload video and reports
+      - name: Upload video, character spritesheets, and reports
         uses: actions/upload-artifact@v4
         with:
           name: motion-demo-output
@@ -61,5 +61,7 @@ jobs:
             out/demo_final.mp4
             out/verification_report.txt
             out/timing.json
+            out/lip_sync.json
+            out/character_*_mouth_spritesheet.png
           if-no-files-found: error
           retention-days: 7
