@@ -61,6 +61,7 @@ jobs:
             out/demo_final.mp4
             out/verification_report.txt
             out/timing.json
+            out/lip_sync.json
             assets/scenes.example.json
             assets/README_AUDIO_INPUT.txt
           if-no-files-found: error
