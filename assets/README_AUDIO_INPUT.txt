@@ -14,6 +14,7 @@ For custom caption timing, copy scenes.example.json to scenes.json and edit each
 
 Allowed visual values: book_quill, lantern, river
 Allowed palette values: rose, lavender, sky, cream, mint, peach, aqua
+Optional presenter values: navy, teal, plum. A presenter enters opposite the illustration; mouth movement follows per-frame speech RMS (approximate, not phoneme-level).
 Time values are in seconds from the beginning of the narration.
 
 Optional custom transparent PNGs can be placed in assets/cutouts using the names:
