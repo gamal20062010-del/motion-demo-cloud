@@ -180,7 +180,7 @@ def draw_character(mouth_open, style, bob=0, gesture=0.0):
         d.pieslice((110, 22, 330, 176), 180, 360, fill=hair)
         d.ellipse((132, 25, 280, 112), fill=hair)
         d.polygon([(121, 95), (151, 42), (192, 66), (222, 30), (274, 62), (314, 102)], fill=hair)
-        d.arc((121, 75, 319, 254), 100, 265, fill=hair, width=15)
+        # Keep the side-swept hairstyle clear of the face and mouth area.
     else:
         d.pieslice((110, 22, 330, 172), 180, 360, fill=hair)
         for hx, hy, radius in [(145, 63, 28), (179, 41, 31), (218, 35, 32), (259, 49, 31), (294, 78, 25)]:
