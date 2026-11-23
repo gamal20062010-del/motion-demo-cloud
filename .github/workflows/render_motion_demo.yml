@@ -1,0 +1,65 @@
+name: Render Arabic Motion Demo
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build-video:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg curl libfribidi-dev libharfbuzz-dev libraqm-dev libfreetype6-dev pkg-config
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python libraries
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install edge-tts pillow
+
+      - name: Download Cairo Arabic font
+        run: |
+          mkdir -p assets/fonts
+          curl --fail --location --retry 3 -o 'assets/fonts/Cairo[slnt,wght].ttf' 'https://raw.githubusercontent.com/google/fonts/main/ofl/cairo/Cairo%5Bslnt%2Cwght%5D.ttf'
+          test -s 'assets/fonts/Cairo[slnt,wght].ttf'
+
+      - name: Verify Pillow RAQM
+        run: |
+          python - <<'PY'
+          from PIL import features
+          if not features.check_feature("raqm"):
+              raise SystemExit("Pillow RAQM support is unavailable.")
+          print("RAQM:", features.version_feature("raqm"))
+          PY
+
+      - name: Render video
+        run: python scripts/build_demo.py
+
+      - name: Upload video and reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: motion-demo-output
+          path: |
+            out/demo_final.mp4
+            out/verification_report.txt
+            out/timing.json
+          if-no-files-found: error
+          retention-days: 7
