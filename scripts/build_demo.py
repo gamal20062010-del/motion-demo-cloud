@@ -274,10 +274,15 @@ def load_cutouts():
         path = CUTOUTS / f"{name}.png"
         im = Image.open(path).convert("RGBA") if path.exists() else draw_vector_cutout(name)
         im.thumbnail((650, 630), Image.Resampling.LANCZOS)
-        shadow = Image.new("RGBA", im.size, (0, 0, 0, 0))
-        shadow.putalpha(im.getchannel("A").point(lambda value: value * 42 // 255))
-        shadow = shadow.filter(ImageFilter.GaussianBlur(12))
-        result[name] = (im, shadow)
+        def make_shadow(source, amount=42, blur=12):
+            sh = Image.new("RGBA", source.size, (0, 0, 0, 0))
+            sh.putalpha(source.getchannel("A").point(lambda value: value * amount // 255))
+            return sh.filter(ImageFilter.GaussianBlur(blur))
+        compact = im.resize((470, 455), Image.Resampling.LANCZOS)
+        result[name] = {
+            "normal": (im, make_shadow(im)),
+            "compact": (compact, make_shadow(compact, amount=42, blur=10)),
+        }
     return result
 
 
@@ -325,13 +330,8 @@ def make_caption_card(scene, fonts):
 
 
 def place_cutout(canvas, cutout_pack, scene, t, duration):
-    image, shadow = cutout_pack
     has_presenter = scene.get("presenter") in PRESENTER_PALETTES
-    if has_presenter:
-        image = image.resize((470, 455), Image.Resampling.LANCZOS)
-        shadow = Image.new("RGBA", image.size, (0, 0, 0, 0))
-        shadow.putalpha(image.getchannel("A").point(lambda value: value * 42 // 255))
-        shadow = shadow.filter(ImageFilter.GaussianBlur(10))
+    image, shadow = cutout_pack["compact" if has_presenter else "normal"]
     enter = ease(t / 0.72)
     leave = ease((duration - t) / 0.58)
     direction = 1 if scene.get("side") == "right" else -1
