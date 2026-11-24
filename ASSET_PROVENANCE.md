@@ -38,3 +38,4 @@ Before adding an externally sourced photo, video, voice recording, music track, 
 5. Do not commit private, personal, or rights-restricted recordings to this public repository.
 
 A file being present in a public repository does not, by itself, establish that it is licensed for reuse.
+\n## Optional Sheikh audio acquisition workflow\n\nThe repository contains an optional manual workflow at `.github/workflows/fetch_istiftah_audio.yml` that can retrieve a specific external recording and time-coded transcript for review. It is not used by the active Remotion renderer. The workflow no longer runs on pushes and now requires the operator to confirm authorization to download, process, and use the recording and transcript. That confirmation is an operational safeguard, not a verification of ownership or a grant of distribution rights. Do not publish retrieved recordings or transcripts unless the applicable permissions allow it.\n
