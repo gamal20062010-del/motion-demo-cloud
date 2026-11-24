@@ -98,6 +98,21 @@ jobs:
         working-directory: Arabic-Kinetic-Video-v2
         run: python scripts/create_abaya_variants.py
 
+      - name: Place abaya below stacked qualities in scene 4
+        working-directory: Arabic-Kinetic-Video-v2
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("src/data/timeline.json")
+          d=json.loads(p.read_text(encoding="utf-8"))
+          s=next(x for x in d["scenes"] if x["id"]=="scene-04-qualities")
+          s["mainElement"]["position"]={"from":{"x":540,"y":1370},"to":{"x":540,"y":1635}}
+          s["mainElement"]["scale"]={"from":0.58,"to":0.42,"interpolation":"smooth-ease"}
+          p.write_text(json.dumps(d,ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")
+          PY
+
       - name: Generate Edge TTS narration and exact word-boundary timing
         working-directory: Arabic-Kinetic-Video-v2
         run: python scripts/generate_narration.py --voice ar-SA-HamedNeural --rate=-6%
