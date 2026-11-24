@@ -114,15 +114,18 @@ jobs:
 
           import shutil
           effective_root = work / "effective-project"
-          shutil.copytree(base_project_root, effective_root)
-          for source_path in overlay_root.rglob("*"):
-              relative = source_path.relative_to(overlay_root)
-              target_path = effective_root / relative
-              if source_path.is_dir():
-                  target_path.mkdir(parents=True, exist_ok=True)
-              elif source_path.is_file():
-                  target_path.parent.mkdir(parents=True, exist_ok=True)
-                  shutil.copy2(source_path, target_path)
+          # The real workflow extracts both archives over an existing checkout.
+          # Start from the checked-in project so archive omissions are preserved.
+          shutil.copytree(current_root, effective_root)
+          for layer_root in (base_project_root, overlay_root):
+              for source_path in layer_root.rglob("*"):
+                  relative = source_path.relative_to(layer_root)
+                  target_path = effective_root / relative
+                  if source_path.is_dir():
+                      target_path.mkdir(parents=True, exist_ok=True)
+                  elif source_path.is_file():
+                      target_path.parent.mkdir(parents=True, exist_ok=True)
+                      shutil.copy2(source_path, target_path)
 
           base_comparison = compare_tree(base_project_root)
           overlay_comparison = compare_tree(overlay_root)
@@ -162,7 +165,7 @@ jobs:
               "",
           ]
 
-          for label, comparison in [("Base archive vs checked-in project", base_comparison), ("Production overlay vs checked-in project", overlay_comparison), ("Effective base plus overlay vs checked-in project", effective_comparison)]:
+          for label, comparison in [("Base archive vs checked-in project", base_comparison), ("Production overlay vs checked-in project", overlay_comparison), ("Checkout plus base and overlay vs checked-in project", effective_comparison)]:
               lines += [
                   f"## {label}",
                   "",
@@ -183,7 +186,7 @@ jobs:
                   lines += [""]
 
           import difflib
-          for label, comparison in [("Base archive", base_comparison), ("Production overlay", overlay_comparison), ("Effective base plus overlay", effective_comparison)]:
+          for label, comparison in [("Base archive", base_comparison), ("Production overlay", overlay_comparison), ("Checkout plus base and overlay", effective_comparison)]:
               for rel in comparison["changed"][:10]:
                   archived_text = comparison["source_files"][rel].read_text(encoding="utf-8", errors="replace").splitlines()
                   current_text = current_files[rel].read_text(encoding="utf-8", errors="replace").splitlines()
