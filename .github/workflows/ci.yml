@@ -43,6 +43,9 @@ jobs:
       - name: Parse timeline JSON
         run: python -m json.tool src/data/timeline.json > /dev/null
 
+      - name: Run generic timeline validator unit tests
+        run: npm test
+
       - name: Validate timeline structure and required assets
         run: npm run check-timeline
 
