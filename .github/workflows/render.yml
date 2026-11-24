@@ -1,4 +1,4 @@
-name: Arabic Kinetic Typography Smoke Test
+name: Render Arabic Abaya Kinetic Typography (Production)
 
 on:
   workflow_dispatch:
@@ -6,32 +6,38 @@ on:
     branches: [integrate/arabic-kinetic-video-v2]
     paths:
       - 'packages/archive-parts/**'
-      - 'packages/overrides/**'
+      - 'packages/production-parts/**'
+      - 'packages/production/**'
       - '.github/workflows/render.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
-  group: arabic-kinetic-video-smoke-${{ github.ref }}-${{ github.sha }}
+  group: abaya-production-render-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   render:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Reassemble and extract project package
+      - name: Reassemble base project and overlay full production sources
         shell: bash
         run: |
           set -euo pipefail
-          test -d packages/archive-parts
-          cat packages/archive-parts/part-*.b64 | base64 --decode > packages/Arabic-Kinetic-Video-v2.tar.xz
-          tar -xJf packages/Arabic-Kinetic-Video-v2.tar.xz -C .
+          cat packages/archive-parts/part-*.b64 | base64 --decode > packages/base-project.tar.xz
+          tar -xJf packages/base-project.tar.xz -C .
           test -f Arabic-Kinetic-Video-v2/package.json
+          cat packages/production-parts/part-*.b64 | base64 --decode > packages/production-overlay.tar.xz
+          tar -xJf packages/production-overlay.tar.xz -C packages
+          test -f packages/production/scripts/generate_narration.py
+          cp -R packages/production/. Arabic-Kinetic-Video-v2/
+          test -f Arabic-Kinetic-Video-v2/src/data/timeline.json
+          test -f Arabic-Kinetic-Video-v2/public/images/abaya-master.webp
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -43,8 +49,9 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install Python image and FFmpeg dependencies
-        run: python -m pip install --upgrade pip Pillow imageio-ffmpeg
+      - name: Install Python TTS, image and portable FFmpeg dependencies
+        working-directory: Arabic-Kinetic-Video-v2
+        run: python -m pip install --upgrade pip && python -m pip install -r requirements.txt
 
       - name: Add portable FFmpeg binary to PATH
         shell: bash
@@ -56,39 +63,11 @@ jobs:
           echo "$RUNNER_TEMP/ffmpeg-bin" >> "$GITHUB_PATH"
           "$FFMPEG_BIN" -version | head -n 2
 
-      - name: Download Noto Arabic variable fonts from Google Fonts
-        working-directory: Arabic-Kinetic-Video-v2
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p public/fonts/NotoSansArabic public/fonts/NotoNaskhArabic
-          curl --fail --location --retry 3 \
-            'https://raw.githubusercontent.com/google/fonts/main/ofl/notosansarabic/NotoSansArabic%5Bwdth%2Cwght%5D.ttf' \
-            --output 'public/fonts/NotoSansArabic/NotoSansArabic[wdth,wght].ttf'
-          curl --fail --location --retry 3 \
-            'https://raw.githubusercontent.com/google/fonts/main/ofl/notonaskharabic/NotoNaskhArabic%5Bwght%5D.ttf' \
-            --output 'public/fonts/NotoNaskhArabic/NotoNaskhArabic[wght].ttf'
-          curl --fail --location --retry 3 \
-            'https://raw.githubusercontent.com/google/fonts/main/ofl/notosansarabic/OFL.txt' \
-            --output public/fonts/NotoSansArabic/OFL.txt
-          curl --fail --location --retry 3 \
-            'https://raw.githubusercontent.com/google/fonts/main/ofl/notonaskharabic/OFL.txt' \
-            --output public/fonts/NotoNaskhArabic/OFL.txt
-          test -s 'public/fonts/NotoSansArabic/NotoSansArabic[wdth,wght].ttf'
-          test -s 'public/fonts/NotoNaskhArabic/NotoNaskhArabic[wght].ttf'
-
-      - name: Apply Webpack-compatible local font URLs
-        run: cp packages/overrides/global.css Arabic-Kinetic-Video-v2/src/styles/global.css
-
-      - name: Install Node dependencies
+      - name: Install Remotion dependencies
         working-directory: Arabic-Kinetic-Video-v2
         run: npm install
 
-      - name: Install standalone FFprobe
-        working-directory: Arabic-Kinetic-Video-v2
-        run: npm install --no-save ffprobe-static@3.1.0
-
-      - name: Add FFprobe to PATH
+      - name: Add standalone FFprobe to PATH
         working-directory: Arabic-Kinetic-Video-v2
         shell: bash
         run: |
@@ -98,37 +77,81 @@ jobs:
           ln -sf "$FFPROBE_BIN" "$RUNNER_TEMP/ffmpeg-bin/ffprobe"
           "$FFPROBE_BIN" -version | head -n 2
 
+      - name: Download Noto Sans Arabic and Noto Naskh Arabic fonts
+        working-directory: Arabic-Kinetic-Video-v2
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p public/fonts/NotoSansArabic public/fonts/NotoNaskhArabic
+          curl --fail --location --retry 3 'https://raw.githubusercontent.com/google/fonts/main/ofl/notosansarabic/NotoSansArabic%5Bwdth%2Cwght%5D.ttf' --output 'public/fonts/NotoSansArabic/NotoSansArabic[wdth,wght].ttf'
+          curl --fail --location --retry 3 'https://raw.githubusercontent.com/google/fonts/main/ofl/notonaskharabic/NotoNaskhArabic%5Bwght%5D.ttf' --output 'public/fonts/NotoNaskhArabic/NotoNaskhArabic[wght].ttf'
+          curl --fail --location --retry 3 'https://raw.githubusercontent.com/google/fonts/main/ofl/notosansarabic/OFL.txt' --output public/fonts/NotoSansArabic/OFL.txt
+          curl --fail --location --retry 3 'https://raw.githubusercontent.com/google/fonts/main/ofl/notonaskharabic/OFL.txt' --output public/fonts/NotoNaskhArabic/OFL.txt
+          test -s 'public/fonts/NotoSansArabic/NotoSansArabic[wdth,wght].ttf'
+          test -s 'public/fonts/NotoNaskhArabic/NotoNaskhArabic[wght].ttf'
+
       - name: TypeScript type-check
         working-directory: Arabic-Kinetic-Video-v2
         run: npx tsc --noEmit
 
-      - name: Generate smoke-test images, narration, SFX and Arabic timeline text
+      - name: Generate four same-angle transparent abaya PNGs
         working-directory: Arabic-Kinetic-Video-v2
-        run: python scripts/generate_test_assets.py --force
+        run: python scripts/create_abaya_variants.py
 
-      - name: Validate timeline structure and transcript
+      - name: Generate Edge TTS narration and exact word-boundary timing
+        working-directory: Arabic-Kinetic-Video-v2
+        run: python scripts/generate_narration.py --voice ar-SA-HamedNeural --rate=-6%
+
+      - name: Generate Pop and Whoosh effects
+        working-directory: Arabic-Kinetic-Video-v2
+        run: python scripts/generate_sfx.py
+
+      - name: Validate timeline and required assets
         working-directory: Arabic-Kinetic-Video-v2
         run: npm run check-timeline
 
-      - name: Mix narration and sound effects
+      - name: Mix effects at 20 percent of narration loudness
         working-directory: Arabic-Kinetic-Video-v2
         run: npm run mix-audio
 
-      - name: Render MP4 with Remotion
+      - name: Render final MP4 with Remotion
         working-directory: Arabic-Kinetic-Video-v2
         run: npm run render
 
-      - name: Validate MP4 with FFprobe and volumedetect
+      - name: Validate final MP4 using FFprobe and volumedetect
         working-directory: Arabic-Kinetic-Video-v2
         run: npm run validate
 
-      - name: Upload rendered video and reports
+      - name: Commit generated media and word timings to this branch
+        shell: bash
+        env:
+          BRANCH_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Arabic-Kinetic-Video-v2
+          if ! git diff --cached --quiet; then
+            git commit -m "ci: materialize abaya production media [skip ci]"
+            git push origin "HEAD:${BRANCH_NAME}"
+          else
+            echo "Generated media already match branch contents."
+          fi
+
+      - name: Upload final video and all production assets
         uses: actions/upload-artifact@v4
         with:
-          name: arabic-kinetic-video-smoke-${{ github.run_number }}
+          name: arabic-abaya-kinetic-final-${{ github.run_number }}
           path: |
             Arabic-Kinetic-Video-v2/out/final-video.mp4
             Arabic-Kinetic-Video-v2/out/render-validation.json
             Arabic-Kinetic-Video-v2/out/audio-mix-report.json
+            Arabic-Kinetic-Video-v2/out/narration-report.json
+            Arabic-Kinetic-Video-v2/public/audio/narration.wav
+            Arabic-Kinetic-Video-v2/public/audio/narration-word-timings.json
+            Arabic-Kinetic-Video-v2/public/audio/mixed_narration.wav
+            Arabic-Kinetic-Video-v2/public/audio/sfx/*.wav
+            Arabic-Kinetic-Video-v2/public/images/element-*.png
+            Arabic-Kinetic-Video-v2/src/data/timeline.json
           if-no-files-found: error
           retention-days: 14
