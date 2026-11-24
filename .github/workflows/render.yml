@@ -3,7 +3,7 @@ name: Render Arabic Abaya Kinetic Typography (Direct Source)
 on:
   workflow_dispatch:
   push:
-    branches: [integrate/arabic-kinetic-video-v2, release/open-source-prep]
+    branches: [integrate/arabic-kinetic-video-v2]
     paths:
       - 'Arabic-Kinetic-Video-v2/**'
       - '.github/workflows/render.yml'
