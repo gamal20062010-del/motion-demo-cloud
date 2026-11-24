@@ -84,19 +84,36 @@ jobs:
               raise SystemExit("Production archive layout changed: expected top-level production/ directory")
 
           current_root = root / "Arabic-Kinetic-Video-v2"
-          archived_files = {p.relative_to(overlay_root).as_posix(): p for p in overlay_root.rglob("*") if p.is_file()}
+          base_project_root = base_out / "Arabic-Kinetic-Video-v2"
+          if not base_project_root.is_dir():
+              raise SystemExit("Base archive layout changed: expected Arabic-Kinetic-Video-v2/ directory")
+          if not current_root.is_dir():
+              raise SystemExit("Checked-in Arabic-Kinetic-Video-v2 directory is missing")
+
           current_files = {p.relative_to(current_root).as_posix(): p for p in current_root.rglob("*") if p.is_file()}
 
-          same, changed, extra = [], [], []
-          for rel, archived_path in sorted(archived_files.items()):
-              current_path = current_files.get(rel)
-              if current_path is None:
-                  extra.append(rel)
-              elif hashlib.sha256(archived_path.read_bytes()).digest() == hashlib.sha256(current_path.read_bytes()).digest():
-                  same.append(rel)
-              else:
-                  changed.append(rel)
-          missing = sorted(set(current_files) - set(archived_files))
+          def compare_tree(source_root: Path):
+              source_files = {p.relative_to(source_root).as_posix(): p for p in source_root.rglob("*") if p.is_file()}
+              same, changed, extra = [], [], []
+              for rel, source_path in sorted(source_files.items()):
+                  current_path = current_files.get(rel)
+                  if current_path is None:
+                      extra.append(rel)
+                  elif hashlib.sha256(source_path.read_bytes()).digest() == hashlib.sha256(current_path.read_bytes()).digest():
+                      same.append(rel)
+                  else:
+                      changed.append(rel)
+              missing = sorted(set(current_files) - set(source_files))
+              return {
+                  "source_files": source_files,
+                  "identical": same,
+                  "changed": changed,
+                  "missing_from_archive": missing,
+                  "extra_in_archive": extra,
+              }
+
+          base_comparison = compare_tree(base_project_root)
+          overlay_comparison = compare_tree(overlay_root)
 
           report = {
               "base_archive": {
@@ -104,21 +121,16 @@ jobs:
                   "bytes": len(base_raw),
                   "members": len(base_members),
                   "sample_paths": [m.name for m in base_members[:80]],
+                  "comparison_with_checked_in_project": {k: v for k, v in base_comparison.items() if k != "source_files"},
               },
               "production_overlay": {
                   "sha256": hashlib.sha256(overlay_raw).hexdigest(),
                   "bytes": len(overlay_raw),
                   "members": len(overlay_members),
-                  "files": len(archived_files),
+                  "files": len(overlay_comparison["source_files"]),
+                  "comparison_with_checked_in_project": {k: v for k, v in overlay_comparison.items() if k != "source_files"},
               },
-              "comparison_with_checked_in_project": {
-                  "checked_in_files": len(current_files),
-                  "archive_files": len(archived_files),
-                  "identical": same,
-                  "changed": changed,
-                  "missing_from_archive": missing,
-                  "extra_in_archive": extra,
-              },
+              "checked_in_project_files": len(current_files),
           }
           (work / "archive-audit.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
 
@@ -128,25 +140,44 @@ jobs:
               "This report was generated read-only. No repository files were replaced or deleted.",
               "",
               f"- Base archive: {len(base_members)} entries, {len(base_raw)} bytes, SHA-256 {report['base_archive']['sha256']}",
-              f"- Production overlay: {len(overlay_members)} entries / {len(archived_files)} files, {len(overlay_raw)} bytes, SHA-256 {report['production_overlay']['sha256']}",
-              "",
-              "## Overlay comparison",
-              "",
-              f"- Identical files: {len(same)}",
-              f"- Changed files: {len(changed)}",
-              f"- Current files missing from archive: {len(missing)}",
-              f"- Files present only in archive: {len(extra)}",
+              f"- Production overlay: {len(overlay_members)} entries / {len(overlay_comparison['source_files'])} files, {len(overlay_raw)} bytes, SHA-256 {report['production_overlay']['sha256']}",
+              f"- Checked-in project: {len(current_files)} files",
               "",
           ]
-          for title, values in [
-              ("Changed", changed), ("Missing from archive", missing), ("Archive-only", extra)
-          ]:
-              lines += [f"## {title}", ""]
-              lines += [f"- {value}" for value in values[:300]] or ["- None"]
-              lines += [""]
+
+          for label, comparison in [("Base archive vs checked-in project", base_comparison), ("Production overlay vs checked-in project", overlay_comparison)]:
+              lines += [
+                  f"## {label}",
+                  "",
+                  f"- Identical files: {len(comparison['identical'])}",
+                  f"- Changed files: {len(comparison['changed'])}",
+                  f"- Current files missing from archive: {len(comparison['missing_from_archive'])}",
+                  f"- Archive-only files: {len(comparison['extra_in_archive'])}",
+                  "",
+              ]
+              for title, key in [
+                  ("Changed", "changed"),
+                  ("Missing from archive", "missing_from_archive"),
+                  ("Archive-only", "extra_in_archive"),
+              ]:
+                  values = comparison[key]
+                  lines += [f"### {title}", ""]
+                  lines += [f"- {value}" for value in values[:300]] or ["- None"]
+                  lines += [""]
+
+          import difflib
+          for label, comparison in [("Base archive", base_comparison), ("Production overlay", overlay_comparison)]:
+              for rel in comparison["changed"][:10]:
+                  archived_text = comparison["source_files"][rel].read_text(encoding="utf-8", errors="replace").splitlines()
+                  current_text = current_files[rel].read_text(encoding="utf-8", errors="replace").splitlines()
+                  diff = list(difflib.unified_diff(current_text, archived_text, fromfile=f"checked-in/{rel}", tofile=f"{label}/{rel}", lineterm=""))
+                  lines += [f"### Diff: {label} / {rel}", "", "~~~diff"]
+                  lines += diff[:100] or ["(No textual diff available)"]
+                  lines += ["~~~", ""]
+
           lines += ["## Base archive paths (first 80)", ""]
           lines += [f"- {m.name}" for m in base_members[:80]]
-          (work / "archive-audit.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+                    (work / "archive-audit.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
           print((work / "archive-audit.md").read_text(encoding="utf-8"))
           PY
 
