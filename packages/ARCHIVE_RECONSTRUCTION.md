@@ -1,10 +1,10 @@
-# Effective reconstruction comparison
+# Historical archive reconstruction
 
-The production workflow performs two ordered operations:
+The earlier production workflow used two ordered extraction operations:
 
-1. Extract `archive-parts/` into the repository root.
-2. Extract `production-parts/` and copy its `production/` directory over `Arabic-Kinetic-Video-v2/`.
+1. Extract `packages/archive-parts/` into the repository root.
+2. Extract `packages/production-parts/` and copy its `production/` directory over `Arabic-Kinetic-Video-v2/`.
 
-The order matters because files in the base archive can overwrite newer tracked files before the production overlay is applied. The archive audit therefore compares not only each archive independently, but also a temporary simulation of this exact two-stage reconstruction against the checked-in project.
+That packaging process has been retired from the active production render workflow. The active workflow now builds directly from the checked-in `Arabic-Kinetic-Video-v2/` source tree.
 
-This file documents the comparison method. Do not replace the production workflow with direct checked-in sources until the simulated result has been reviewed and a direct-source render has passed.
+The original archives remain in the repository temporarily as historical rollback material. Their integrity and contents can be reviewed using `.github/workflows/archive-audit.yml`; do not reintroduce archive extraction into the active rendering path.
