@@ -65,7 +65,7 @@ jobs:
 
       - name: Install Remotion dependencies
         working-directory: Arabic-Kinetic-Video-v2
-        run: npm install
+        run: npm ci
 
       - name: Add standalone FFprobe to PATH
         working-directory: Arabic-Kinetic-Video-v2
@@ -110,7 +110,7 @@ jobs:
           s=next(x for x in d["scenes"] if x["id"]=="scene-04-qualities")
           s["mainElement"]["position"]={"from":{"x":540,"y":1370},"to":{"x":540,"y":1635}}
           s["mainElement"]["scale"]={"from":0.58,"to":0.42,"interpolation":"smooth-ease"}
-          p.write_text(json.dumps(d,ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")
+          p.write_text(json.dumps(d,ensure_ascii=False,indent=2)+chr(10),encoding="utf-8")
           PY
 
       - name: Generate Edge TTS narration and exact word-boundary timing
