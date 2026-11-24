@@ -1,3 +1,4 @@
+# Production rendering reads the checked-in project tree directly; legacy archive snapshots are not runtime inputs.
 name: Render Arabic Abaya Kinetic Typography (Direct Source)
 
 on:
