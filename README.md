@@ -28,7 +28,7 @@ The current abaya example uses six scenes and a 670-frame timeline. Those values
 | `Arabic-Kinetic-Video-v2/public/` | Fonts, image assets, narration, timing data, and sound effects used by the example. |
 | `scripts/build_demo.py` | Earlier standalone Python-based demo renderer. |
 | `assets/` | Example scene data and instructions for supplying narration to the earlier renderer. |
-| `packages/archive-parts/`, `packages/production-parts/` | Transitional Base64 archive chunks currently consumed by the production workflow. These are a packaging workaround, not the intended long-term source layout. |
+| `packages/archive-parts/`, `packages/production-parts/` | Legacy Base64 snapshots retained for audit / rollback; the active render workflow no longer consumes them. |
 
 ## Run the Remotion example locally
 
@@ -68,11 +68,11 @@ The active production workflow is:
 
 `.github/workflows/render.yml`
 
-It runs on manual dispatch and on selected changes to the production branch. It reconstructs the current project from the transitional archive chunks, installs dependencies, generates narration and word timings, produces visual variants and sound effects, validates the timeline, renders the MP4, validates the result, and uploads a GitHub Actions artifact.
+It runs on manual dispatch, pull requests, and selected source changes. It builds directly from the checked-in `Arabic-Kinetic-Video-v2/` directory: installs locked dependencies, verifies the checked-in Arabic fonts and master image, generates image variants, narration and word-boundary timings, generates sound effects, validates the timeline, renders the MP4, validates the result, and uploads a GitHub Actions artifact.
 
-A separate `.github/workflows/ci.yml` runs read-only pull-request checks for timeline JSON parsing, the current example timeline validator, locked dependency installation, and TypeScript type-checking. It does not render or commit media.
+A separate `.github/workflows/ci.yml` runs read-only pull-request checks for timeline JSON parsing, the current example timeline validator, locked dependency installation, and TypeScript type-checking. The production workflow also runs as a full end-to-end test on pull requests.
 
-The generated artifact is the intended way to retrieve the final video from a workflow run. The current workflow also commits generated outputs back to its source branch; separating generated media from source control remains an open cleanup item. The archive reconstruction and duplicate workflow arrangement are also scheduled for simplification.
+Generated MP4/audio/report files are uploaded as artifacts; the workflow does not commit generated outputs back into the source branch. The old Base64 archives are retained for audit and rollback only and are no longer required by the active production render workflow.
 
 ## Important accuracy notes
 
