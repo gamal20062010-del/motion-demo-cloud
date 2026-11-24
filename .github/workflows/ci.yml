@@ -1,0 +1,53 @@
+name: Pull Request Validation
+
+on:
+  pull_request:
+    branches: [integrate/arabic-kinetic-video-v2]
+    paths:
+      - 'Arabic-Kinetic-Video-v2/**'
+      - '.github/workflows/ci.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: arabic-kinetic-pr-check-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: Arabic-Kinetic-Video-v2
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: Arabic-Kinetic-Video-v2/package-lock.json
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install locked Node dependencies
+        run: npm ci
+
+      - name: Parse timeline JSON
+        run: python -m json.tool src/data/timeline.json > /dev/null
+
+      - name: Run generic timeline validator unit tests
+        run: npm test
+
+      - name: Validate timeline structure and required assets
+        run: npm run check-timeline
+
+      - name: TypeScript type-check
+        run: npx tsc --noEmit

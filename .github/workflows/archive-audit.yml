@@ -1,0 +1,210 @@
+name: Production Archive Audit
+
+on:
+  pull_request:
+    branches: [integrate/arabic-kinetic-video-v2]
+    paths:
+      - 'packages/archive-parts/**'
+      - 'packages/production-parts/**'
+      - 'Arabic-Kinetic-Video-v2/**'
+      - '.github/workflows/archive-audit.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: arabic-video-archive-audit-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  inspect-archives:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Reassemble, inspect and compare archives without modifying the repository
+        shell: bash
+        env:
+          AUDIT_TEMP: ${{ runner.temp }}/archive-audit
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import base64
+          import hashlib
+          import io
+          import json
+          import os
+          import tarfile
+          from pathlib import Path, PurePosixPath
+
+          root = Path.cwd()
+          work = Path(os.environ["AUDIT_TEMP"])
+          base_out = work / "base"
+          overlay_out = work / "overlay"
+          base_out.mkdir(parents=True, exist_ok=True)
+          overlay_out.mkdir(parents=True, exist_ok=True)
+
+          def assemble(parts_dir: Path, pattern: str, output: Path) -> bytes:
+              parts = sorted(parts_dir.glob(pattern))
+              if not parts:
+                  raise SystemExit(f"No archive parts found in {parts_dir}")
+              encoded = "".join("".join(p.read_text(encoding="ascii").split()) for p in parts)
+              try:
+                  raw = base64.b64decode(encoded, validate=True)
+              except Exception as exc:
+                  raise SystemExit(f"Invalid Base64 chunks in {parts_dir}: {exc}")
+              output.write_bytes(raw)
+              return raw
+
+          def inspect(raw: bytes, label: str, destination: Path):
+              try:
+                  archive = tarfile.open(fileobj=io.BytesIO(raw), mode="r:xz")
+              except Exception as exc:
+                  raise SystemExit(f"{label} is not a readable XZ/TAR archive: {exc}")
+              with archive:
+                  members = archive.getmembers()
+                  for member in members:
+                      path = PurePosixPath(member.name)
+                      if path.is_absolute() or ".." in path.parts:
+                          raise SystemExit(f"Unsafe path in {label}: {member.name}")
+                      if member.issym() or member.islnk() or not (member.isfile() or member.isdir()):
+                          raise SystemExit(f"Unsupported special entry in {label}: {member.name}")
+                  archive.extractall(destination, filter="data")
+              return members
+
+          base_raw = assemble(root / "packages/archive-parts", "part-*.b64", work / "base-project.tar.xz")
+          overlay_raw = assemble(root / "packages/production-parts", "part-*.b64", work / "production-overlay.tar.xz")
+          base_members = inspect(base_raw, "Base project archive", base_out)
+          overlay_members = inspect(overlay_raw, "Production overlay archive", overlay_out)
+
+          overlay_root = overlay_out / "production"
+          if not overlay_root.is_dir():
+              raise SystemExit("Production archive layout changed: expected top-level production/ directory")
+
+          current_root = root / "Arabic-Kinetic-Video-v2"
+          base_project_root = base_out / "Arabic-Kinetic-Video-v2"
+          if not base_project_root.is_dir():
+              raise SystemExit("Base archive layout changed: expected Arabic-Kinetic-Video-v2/ directory")
+          if not current_root.is_dir():
+              raise SystemExit("Checked-in Arabic-Kinetic-Video-v2 directory is missing")
+
+          current_files = {p.relative_to(current_root).as_posix(): p for p in current_root.rglob("*") if p.is_file()}
+
+          def compare_tree(source_root: Path):
+              source_files = {p.relative_to(source_root).as_posix(): p for p in source_root.rglob("*") if p.is_file()}
+              same, changed, extra = [], [], []
+              for rel, source_path in sorted(source_files.items()):
+                  current_path = current_files.get(rel)
+                  if current_path is None:
+                      extra.append(rel)
+                  elif hashlib.sha256(source_path.read_bytes()).digest() == hashlib.sha256(current_path.read_bytes()).digest():
+                      same.append(rel)
+                  else:
+                      changed.append(rel)
+              missing = sorted(set(current_files) - set(source_files))
+              return {
+                  "source_files": source_files,
+                  "identical": same,
+                  "changed": changed,
+                  "missing_from_archive": missing,
+                  "extra_in_archive": extra,
+              }
+
+          import shutil
+          effective_root = work / "effective-project"
+          # The real workflow extracts both archives over an existing checkout.
+          # Start from the checked-in project so archive omissions are preserved.
+          shutil.copytree(current_root, effective_root)
+          for layer_root in (base_project_root, overlay_root):
+              for source_path in layer_root.rglob("*"):
+                  relative = source_path.relative_to(layer_root)
+                  target_path = effective_root / relative
+                  if source_path.is_dir():
+                      target_path.mkdir(parents=True, exist_ok=True)
+                  elif source_path.is_file():
+                      target_path.parent.mkdir(parents=True, exist_ok=True)
+                      shutil.copy2(source_path, target_path)
+
+          base_comparison = compare_tree(base_project_root)
+          overlay_comparison = compare_tree(overlay_root)
+          effective_comparison = compare_tree(effective_root)
+
+          report = {
+              "base_archive": {
+                  "sha256": hashlib.sha256(base_raw).hexdigest(),
+                  "bytes": len(base_raw),
+                  "members": len(base_members),
+                  "sample_paths": [m.name for m in base_members[:80]],
+                  "comparison_with_checked_in_project": {k: v for k, v in base_comparison.items() if k != "source_files"},
+              },
+              "production_overlay": {
+                  "sha256": hashlib.sha256(overlay_raw).hexdigest(),
+                  "bytes": len(overlay_raw),
+                  "members": len(overlay_members),
+                  "files": len(overlay_comparison["source_files"]),
+                  "comparison_with_checked_in_project": {k: v for k, v in overlay_comparison.items() if k != "source_files"},
+              },
+              "effective_archive_plus_overlay": {
+                  "files": len(effective_comparison["source_files"]),
+                  "comparison_with_checked_in_project": {k: v for k, v in effective_comparison.items() if k != "source_files"},
+              },
+              "checked_in_project_files": len(current_files),
+          }
+          (work / "archive-audit.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
+
+          lines = [
+              "# Production archive audit",
+              "",
+              "This report was generated read-only. No repository files were replaced or deleted.",
+              "",
+              f"- Base archive: {len(base_members)} entries, {len(base_raw)} bytes, SHA-256 {report['base_archive']['sha256']}",
+              f"- Production overlay: {len(overlay_members)} entries / {len(overlay_comparison['source_files'])} files, {len(overlay_raw)} bytes, SHA-256 {report['production_overlay']['sha256']}",
+              f"- Checked-in project: {len(current_files)} files",
+              "",
+          ]
+
+          for label, comparison in [("Base archive vs checked-in project", base_comparison), ("Production overlay vs checked-in project", overlay_comparison), ("Checkout plus base and overlay vs checked-in project", effective_comparison)]:
+              lines += [
+                  f"## {label}",
+                  "",
+                  f"- Identical files: {len(comparison['identical'])}",
+                  f"- Changed files: {len(comparison['changed'])}",
+                  f"- Current files missing from archive: {len(comparison['missing_from_archive'])}",
+                  f"- Archive-only files: {len(comparison['extra_in_archive'])}",
+                  "",
+              ]
+              for title, key in [
+                  ("Changed", "changed"),
+                  ("Missing from archive", "missing_from_archive"),
+                  ("Archive-only", "extra_in_archive"),
+              ]:
+                  values = comparison[key]
+                  lines += [f"### {title}", ""]
+                  lines += [f"- {value}" for value in values[:300]] or ["- None"]
+                  lines += [""]
+
+          import difflib
+          for label, comparison in [("Base archive", base_comparison), ("Production overlay", overlay_comparison), ("Checkout plus base and overlay", effective_comparison)]:
+              for rel in comparison["changed"][:10]:
+                  archived_text = comparison["source_files"][rel].read_text(encoding="utf-8", errors="replace").splitlines()
+                  current_text = current_files[rel].read_text(encoding="utf-8", errors="replace").splitlines()
+                  diff = list(difflib.unified_diff(current_text, archived_text, fromfile=f"checked-in/{rel}", tofile=f"{label}/{rel}", lineterm=""))
+                  lines += [f"### Diff: {label} / {rel}", "", "~~~diff"]
+                  lines += diff[:100] or ["(No textual diff available)"]
+                  lines += ["~~~", ""]
+
+          lines += ["## Base archive paths (first 80)", ""]
+          lines += [f"- {m.name}" for m in base_members[:80]]
+          (work / "archive-audit.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+          print((work / "archive-audit.md").read_text(encoding="utf-8"))
+          PY
+
+      - name: Upload archive audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-archive-audit-${{ github.run_number }}
+          path: ${{ runner.temp }}/archive-audit/archive-audit.*
+          if-no-files-found: error
+          retention-days: 14

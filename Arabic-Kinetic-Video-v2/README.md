@@ -32,7 +32,7 @@
 3. `element-03.png`: تطريز ذهبي ووردي ظاهر على الحواف والأكمام.
 4. `element-04.png`: النسخة المطرزة شبه الشفافة.
 
-توجد الصورة الرئيسية في `public/images/abaya-master.png` لإعادة إنتاج الحالات عند الحاجة.
+توجد الصورة الرئيسية في `public/images/abaya-master.webp` لإعادة إنتاج الحالات عند الحاجة.
 
 ## الخطوط والمؤثرات
 
@@ -69,3 +69,13 @@ Workflow: `.github/workflows/render.yml` على الفرع `integrate/arabic-kin
 ## ملاحظة بشأن التطابق
 
 الصوت في هذه النسخة هو تعليق اصطناعي عبر الصوت المطلوب `ar-SA-HamedNeural`، وليس استخراجاً من الفيديو الأصلي؛ لأن ملف ذلك الفيديو لم يصل إلى هذه المحادثة. لا تدّعي هذه النسخة مطابقة أداء تسجيل أصلي غير متاح.
+
+
+## Timeline validation
+
+The production example is checked in two layers:
+
+- `scripts/validate_timeline_generic.py` checks the reusable timeline structure: project dimensions and duration, scene ordering and bounds, event ranges, palette references, and referenced public assets.
+- `scripts/validate_timeline.py` remains the stricter abaya-example profile. It checks the approved six-scene transcript, timings, palette, image states, and narration requirements.
+
+Run both with `npm run check-timeline`. The generic validator has unit tests covering valid alternate project dimensions, overlapping scenes, invalid event ranges, path traversal, and unknown palette tokens; run them with `npm test`.
