@@ -6,6 +6,7 @@ on:
     branches: [integrate/arabic-kinetic-video-v2]
     paths:
       - 'packages/archive-parts/**'
+      - 'packages/overrides/**'
       - '.github/workflows/render.yml'
 
 permissions:
@@ -70,6 +71,9 @@ jobs:
             --output public/fonts/NotoNaskhArabic/OFL.txt
           test -s 'public/fonts/NotoSansArabic/NotoSansArabic[wdth,wght].ttf'
           test -s 'public/fonts/NotoNaskhArabic/NotoNaskhArabic[wght].ttf'
+
+      - name: Apply Webpack-compatible local font URLs
+        run: cp packages/overrides/global.css Arabic-Kinetic-Video-v2/src/styles/global.css
 
       - name: Install Node dependencies
         working-directory: Arabic-Kinetic-Video-v2
