@@ -1,0 +1,98 @@
+name: Render Arabic Kinetic Typography
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, integrate/arabic-kinetic-video-v2]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'tsconfig.json'
+      - '.github/workflows/render.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: arabic-kinetic-video-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install FFmpeg and Arabic test speech engine
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg espeak-ng
+
+      - name: Install Python image dependency
+        run: python -m pip install --upgrade pip Pillow
+
+      - name: Download Noto Arabic variable fonts from Google Fonts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p public/fonts/NotoSansArabic public/fonts/NotoNaskhArabic
+          curl --fail --location --retry 3 \
+            'https://raw.githubusercontent.com/google/fonts/main/ofl/notosansarabic/NotoSansArabic%5Bwdth%2Cwght%5D.ttf' \
+            --output 'public/fonts/NotoSansArabic/NotoSansArabic[wdth,wght].ttf'
+          curl --fail --location --retry 3 \
+            'https://raw.githubusercontent.com/google/fonts/main/ofl/notonaskharabic/NotoNaskhArabic%5Bwght%5D.ttf' \
+            --output 'public/fonts/NotoNaskhArabic/NotoNaskhArabic[wght].ttf'
+          curl --fail --location --retry 3 \
+            'https://raw.githubusercontent.com/google/fonts/main/ofl/notosansarabic/OFL.txt' \
+            --output public/fonts/NotoSansArabic/OFL.txt
+          curl --fail --location --retry 3 \
+            'https://raw.githubusercontent.com/google/fonts/main/ofl/notonaskharabic/OFL.txt' \
+            --output public/fonts/NotoNaskhArabic/OFL.txt
+          test -s 'public/fonts/NotoSansArabic/NotoSansArabic[wdth,wght].ttf'
+          test -s 'public/fonts/NotoNaskhArabic/NotoNaskhArabic[wght].ttf'
+
+      - name: Install Node dependencies
+        run: npm install
+
+      - name: TypeScript type-check
+        run: npx tsc --noEmit
+
+      - name: Generate smoke-test images, narration, SFX and Arabic timeline text
+        run: python scripts/generate_test_assets.py --force
+
+      - name: Validate timeline structure and transcript
+        run: npm run check-timeline
+
+      - name: Mix narration and sound effects
+        run: npm run mix-audio
+
+      - name: Render MP4 with Remotion
+        run: npm run render
+
+      - name: Validate MP4 with FFprobe and volumedetect
+        run: npm run validate
+
+      - name: Upload rendered video and reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: arabic-kinetic-video-smoke-${{ github.run_number }}
+          path: |
+            out/final-video.mp4
+            out/render-validation.json
+            out/audio-mix-report.json
+          if-no-files-found: error
+          retention-days: 14

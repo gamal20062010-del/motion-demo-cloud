@@ -1,0 +1,68 @@
+{
+  "voice": "ar-SA-HamedNeural",
+  "rate": "-6%",
+  "durationSeconds": 22.333333,
+  "wordCount": 38,
+  "segments": [
+    {
+      "id": "scene-01",
+      "text": "العباءة إنما جعلت للستر ولم تجعل للزينة،",
+      "startFrame": 0,
+      "endFrame": 105,
+      "rawTtsDurationSeconds": 4.488,
+      "renderedSpeechDurationSeconds": 3.4851,
+      "tempoFactor": 1.28229,
+      "wordCount": 7
+    },
+    {
+      "id": "scene-02",
+      "text": "لا يكون فيها زركشة ولا فيها تطريز،",
+      "startFrame": 120,
+      "endFrame": 204,
+      "rawTtsDurationSeconds": 4.296,
+      "renderedSpeechDurationSeconds": 2.7929,
+      "tempoFactor": 1.53429,
+      "wordCount": 7
+    },
+    {
+      "id": "scene-03",
+      "text": "وإنما تكون سادة لا تلفت النظر،",
+      "startFrame": 210,
+      "endFrame": 294,
+      "rawTtsDurationSeconds": 3.984,
+      "renderedSpeechDurationSeconds": 2.79,
+      "tempoFactor": 1.42286,
+      "wordCount": 6
+    },
+    {
+      "id": "scene-04",
+      "text": "وتكون أيضاً ضافية، تكون ساترة وتكون فضفاضة وواسعة،",
+      "startFrame": 300,
+      "endFrame": 474,
+      "rawTtsDurationSeconds": 6.24,
+      "renderedSpeechDurationSeconds": 5.7801,
+      "tempoFactor": 1.07586,
+      "wordCount": 8
+    },
+    {
+      "id": "scene-05",
+      "text": "ليست عباءة شفافة",
+      "startFrame": 480,
+      "endFrame": 555,
+      "rawTtsDurationSeconds": 3.048,
+      "renderedSpeechDurationSeconds": 2.4842,
+      "tempoFactor": 1.2192,
+      "wordCount": 3
+    },
+    {
+      "id": "scene-06",
+      "text": "واسمها عباءة وهي لا تستر، هذا تلاعب.",
+      "startFrame": 570,
+      "endFrame": 670,
+      "rawTtsDurationSeconds": 4.992,
+      "renderedSpeechDurationSeconds": 3.3253,
+      "tempoFactor": 1.4976,
+      "wordCount": 7
+    }
+  ]
+}

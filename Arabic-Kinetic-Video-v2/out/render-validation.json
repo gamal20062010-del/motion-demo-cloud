@@ -1,0 +1,91 @@
+{
+  "video": "out/final-video.mp4",
+  "passed": true,
+  "checks": {
+    "resolution": {
+      "expected": "1080x1920",
+      "actual": "1080x1920",
+      "passed": true
+    },
+    "fps": {
+      "expected": "30",
+      "actual": "30",
+      "passed": true
+    },
+    "frames": {
+      "expected": 670,
+      "actual": 670,
+      "passed": true
+    },
+    "durationSeconds": {
+      "expected": 22.333333333333332,
+      "actual": 22.336,
+      "passed": true
+    },
+    "videoCodec": {
+      "expected": "h264",
+      "actual": "h264",
+      "passed": true
+    },
+    "audioCodec": {
+      "expected": "aac",
+      "actual": "aac",
+      "passed": true
+    },
+    "audioSampleRate": {
+      "expected": 48000,
+      "actual": 48000,
+      "passed": true
+    },
+    "audioChannels": {
+      "expected": 2,
+      "actual": 2,
+      "passed": true
+    },
+    "audioPeakBelowClipping": {
+      "expected": "<= 0 dBFS",
+      "actual": -5.8,
+      "passed": true
+    }
+  },
+  "audioVolumedetect": {
+    "meanVolumeDbfs": -24.5,
+    "maxVolumeDbfs": -5.8
+  },
+  "errors": [],
+  "ffprobe": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "codec_type": "video",
+        "width": 1080,
+        "height": 1920,
+        "r_frame_rate": "30/1",
+        "avg_frame_rate": "30/1",
+        "bit_rate": "403572",
+        "nb_read_frames": "670"
+      },
+      {
+        "codec_name": "aac",
+        "codec_type": "audio",
+        "sample_rate": "48000",
+        "channels": 2,
+        "channel_layout": "stereo",
+        "r_frame_rate": "0/0",
+        "avg_frame_rate": "0/0",
+        "bit_rate": "317374",
+        "nb_read_frames": "1047"
+      }
+    ],
+    "format": {
+      "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+      "duration": "22.336000",
+      "bit_rate": "730814"
+    }
+  },
+  "watermark": {
+    "expected": false,
+    "sourceCompositionHasWatermark": false
+  }
+}

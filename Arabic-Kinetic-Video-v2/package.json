@@ -1,0 +1,30 @@
+{
+  "name": "arabic-abaya-kinetic-typography",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Six-scene Arabic 2D kinetic typography abaya video, driven by Edge TTS word-boundary metadata and rendered with Remotion.",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "compositions": "remotion compositions src/index.ts",
+    "build-images": "python scripts/create_abaya_variants.py",
+    "generate-narration": "python scripts/generate_narration.py",
+    "generate-sfx": "python scripts/generate_sfx.py",
+    "mix-audio": "python scripts/mix_audio.py --timeline src/data/timeline.json",
+    "check-timeline": "python scripts/validate_timeline.py --timeline src/data/timeline.json",
+    "render": "remotion render src/index.ts ArabicKineticTypography out/final-video.mp4",
+    "validate": "python scripts/validate_render.py out/final-video.mp4 --timeline src/data/timeline.json --report out/render-validation.json",
+    "build-video": "npm run build-images && npm run generate-narration && npm run generate-sfx && npm run check-timeline && npm run mix-audio && npm run render && npm run validate"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.546",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.546"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.18",
+    "@types/react-dom": "18.3.5",
+    "ffprobe-static": "3.1.0",
+    "typescript": "5.7.3"
+  }
+}

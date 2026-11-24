@@ -1,0 +1,11 @@
+node_modules/
+*.log
+__pycache__/
+*.py[cod]
+.DS_Store
+out/*.mp4
+out/*.mov
+out/*.mkv
+out/*.webm
+out/*.tmp
+.tmp/
