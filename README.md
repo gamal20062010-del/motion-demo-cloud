@@ -26,7 +26,7 @@ The current abaya example uses six scenes and a 670-frame timeline. Those values
 | `Arabic-Kinetic-Video-v2/src/components/` | Reusable rendering components and timeline utilities. |
 | `Arabic-Kinetic-Video-v2/scripts/` | Narration generation, image variants, SFX generation, audio mixing, and validation. |
 | `Arabic-Kinetic-Video-v2/public/` | Fonts, image assets, narration, timing data, and sound effects used by the example. |
-| `scripts/build_demo.py` | Earlier standalone Python-based demo renderer. |
+| `scripts/build_demo.py` | Earlier standalone Python-based demo renderer. |\n| `.github/workflows/fetch_istiftah_audio.yml` | Optional manual source-audio acquisition utility. It requires an explicit authorization confirmation and is not part of the video renderer. |
 | `assets/` | Example scene data and instructions for supplying narration to the earlier renderer. |
 | `packages/archive-parts/`, `packages/production-parts/` | Legacy Base64 snapshots retained for audit / rollback; the active render workflow no longer consumes them. |
 
@@ -37,7 +37,7 @@ Requirements:
 - Node.js 20 or newer.
 - Python 3.12 or newer.
 - FFmpeg and FFprobe (the GitHub Actions workflow prepares portable binaries).
-- Network access when generating Edge TTS narration or downloading fonts.
+- Network access when generating Edge TTS narration. The checked-in Noto Arabic fonts are used directly.
 
 From the repository root:
 
@@ -85,7 +85,7 @@ Generated MP4/audio/report files are uploaded as artifacts; the workflow does no
 
 There is currently no repository-level `LICENSE` file. Until a license is selected and added, do not assume that the public visibility of this repository grants permission to reuse, redistribute, or modify its code or bundled creative assets.
 
-See [ASSET_PROVENANCE.md](ASSET_PROVENANCE.md) for the recorded origin of the abaya image, derived image variants, fonts, narration, and sound effects. Third-party dependencies retain their own licenses.
+See [ASSET_PROVENANCE.md](ASSET_PROVENANCE.md) for the recorded origin of the abaya image, derived image variants, fonts, narration, and sound effects. Third-party dependencies retain their own licenses. The optional source-audio acquisition workflow is gated by a manual authorization confirmation; source recordings and transcripts must not be redistributed without permission.
 
 ## العربية
 
