@@ -143,7 +143,12 @@ jobs:
                   "files": len(overlay_comparison["source_files"]),
                   "comparison_with_checked_in_project": {k: v for k, v in overlay_comparison.items() if k != "source_files"},
               },
-              "effective_archive_plus_overlay": {\n                  "files": len(effective_comparison["source_files"]),\n                  "comparison_with_checked_in_project": {k: v for k, v in effective_comparison.items() if k != "source_files"},\n              },\n              "checked_in_project_files": len(current_files),\n          }
+              "effective_archive_plus_overlay": {
+                  "files": len(effective_comparison["source_files"]),
+                  "comparison_with_checked_in_project": {k: v for k, v in effective_comparison.items() if k != "source_files"},
+              },
+              "checked_in_project_files": len(current_files),
+          }
           (work / "archive-audit.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + chr(10), encoding="utf-8")
 
           lines = [
