@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: arabic-kinetic-video-smoke-${{ github.ref }}
+  group: arabic-kinetic-video-smoke-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: true
 
 jobs:
