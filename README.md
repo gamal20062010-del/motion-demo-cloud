@@ -70,6 +70,8 @@ The active production workflow is:
 
 It runs on manual dispatch and on selected changes to the production branch. It reconstructs the current project from the transitional archive chunks, installs dependencies, generates narration and word timings, produces visual variants and sound effects, validates the timeline, renders the MP4, validates the result, and uploads a GitHub Actions artifact.
 
+A separate `.github/workflows/ci.yml` runs read-only pull-request checks for timeline JSON parsing, the current example timeline validator, locked dependency installation, and TypeScript type-checking. It does not render or commit media.
+
 The generated artifact is the intended way to retrieve the final video from a workflow run. The current workflow also commits generated outputs back to its source branch; separating generated media from source control remains an open cleanup item. The archive reconstruction and duplicate workflow arrangement are also scheduled for simplification.
 
 ## Important accuracy notes
