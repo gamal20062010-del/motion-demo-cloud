@@ -84,6 +84,20 @@ jobs:
         working-directory: Arabic-Kinetic-Video-v2
         run: npm install
 
+      - name: Install standalone FFprobe
+        working-directory: Arabic-Kinetic-Video-v2
+        run: npm install --no-save ffprobe-static@3.1.0
+
+      - name: Add FFprobe to PATH
+        working-directory: Arabic-Kinetic-Video-v2
+        shell: bash
+        run: |
+          set -euo pipefail
+          FFPROBE_BIN="$(node -p "require('ffprobe-static').path")"
+          test -x "$FFPROBE_BIN"
+          ln -sf "$FFPROBE_BIN" "$RUNNER_TEMP/ffmpeg-bin/ffprobe"
+          "$FFPROBE_BIN" -version | head -n 2
+
       - name: TypeScript type-check
         working-directory: Arabic-Kinetic-Video-v2
         run: npx tsc --noEmit
