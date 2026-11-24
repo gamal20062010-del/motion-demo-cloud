@@ -18,7 +18,7 @@ This checklist describes the current state of the repository and the remaining w
 - [ ] Consolidate or retire the older nested smoke-test workflow under `Arabic-Kinetic-Video-v2/.github/workflows/`; GitHub Actions only discovers workflows under the repository-root `.github/workflows/`.
 - [ ] Stop committing generated MP4/audio/report outputs to the source branch by default; publish them as workflow artifacts or release assets instead.
 - [ ] Separate reusable engine code from the abaya-specific example, transcript, image assets, and fixed scene assumptions.
-- [ ] Generalize timeline validation. The current validator contains assumptions about the six-scene, 670-frame abaya example.
+- [ ] Expand generic timeline validation to cover additional layout, RTL typography, interpolation, and audio synchronization edge cases; keep the abaya-specific profile separate.
 - [ ] Add automated tests for Arabic RTL layout, word-boundary timing, timeline interpolation, scene transitions, audio offsets/mixing, and output validation.
 - [ ] Add contributor guidance, support policy, and a documented configuration format for new video projects.
 - [x] Verify that a clean checkout can build the demo without archive reconstruction or previously generated media: the direct-source PR render completed and passed final MP4 validation.
