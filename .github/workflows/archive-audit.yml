@@ -177,7 +177,7 @@ jobs:
 
           lines += ["## Base archive paths (first 80)", ""]
           lines += [f"- {m.name}" for m in base_members[:80]]
-                    (work / "archive-audit.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+          (work / "archive-audit.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
           print((work / "archive-audit.md").read_text(encoding="utf-8"))
           PY
 
